@@ -399,6 +399,8 @@ class MainNavigation(Navigation):
             'broadcast_dashboard',
             'broadcast_dashboard_updates',
             'view_current_broadcast',
+            'new_broadcast',
+            'write_new_broadcast',
         },
         'previous-broadcasts': {
             'broadcast_dashboard_previous',

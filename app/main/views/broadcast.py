@@ -13,9 +13,12 @@ from app.main import main
 from app.main.forms import (
     BroadcastAreaForm,
     BroadcastAreaFormWithSelectAll,
+    BroadcastTemplateForm,
+    NewBroadcastForm,
     SearchByNameForm,
 )
 from app.models.broadcast_message import BroadcastMessage, BroadcastMessages
+from app.notify_client.service_api_client import service_api_client
 from app.utils import service_has_permission, user_has_permissions
 
 
@@ -68,6 +71,62 @@ def get_broadcast_dashboard_partials(service_id):
             empty_message='You do not have any current alerts',
             view_broadcast_endpoint='.view_current_broadcast',
         ),
+    )
+
+
+@main.route('/services/<uuid:service_id>/new-broadcast', methods=['GET', 'POST'])
+@user_has_permissions('send_messages')
+@service_has_permission('broadcast')
+def new_broadcast(service_id):
+    form = NewBroadcastForm()
+
+    if form.validate_on_submit():
+        if form.use_template:
+            return redirect(url_for(
+                '.choose_template',
+                service_id=current_service.id,
+            ))
+        return redirect(url_for(
+            '.write_new_broadcast',
+            service_id=current_service.id,
+        ))
+
+    return render_template(
+        'views/broadcast/new-broadcast.html',
+        form=form,
+    )
+
+
+@main.route('/services/<uuid:service_id>/write-new-broadcast', methods=['GET', 'POST'])
+@user_has_permissions('send_messages')
+@service_has_permission('broadcast')
+def write_new_broadcast(service_id):
+    form = BroadcastTemplateForm()
+
+    if form.validate_on_submit():
+        template = service_api_client.create_service_template(
+            form.name.data,
+            'broadcast',
+            form.template_content.data,
+            current_service.id,
+        )
+        broadcast_message = BroadcastMessage.create(
+            service_id=current_service.id,
+            template_id=template['data']['id'],
+        )
+        service_api_client.delete_service_template(
+            service_id=current_service.id,
+            template_id=template['data']['id'],
+        )
+        return redirect(url_for(
+            '.preview_broadcast_areas',
+            service_id=current_service.id,
+            broadcast_message_id=broadcast_message.id,
+        ))
+
+    return render_template(
+        'views/broadcast/write-new-broadcast.html',
+        form=form,
     )
 
 

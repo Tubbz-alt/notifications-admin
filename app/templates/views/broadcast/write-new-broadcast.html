@@ -1,0 +1,35 @@
+{% from "components/form.html" import form_wrapper %}
+{% from "components/page-header.html" import page_header %}
+{% from "components/page-footer.html" import sticky_page_footer %}
+{% from "components/textbox.html" import textbox %}
+
+{% extends "withnav_template.html" %}
+
+{% block service_page_title %}
+  New alert
+{% endblock %}
+
+{% block maincolumn_content %}
+
+  {{ page_header(
+    'New alert',
+    back_link=url_for('.new_broadcast', service_id=current_service.id),
+  )}}
+
+  {% call form_wrapper() %}
+    <div class="govuk-grid-row">
+      <div class="govuk-grid-column-two-thirds">
+        {{ form.name(param_extensions={
+          "classes": "govuk-!-width-full",
+          "hint": {"text": "Your recipients will not see this"},
+          "label": {"text": "Title"}
+        }) }}
+      </div>
+      <div class="govuk-grid-column-two-thirds">
+        {{ textbox(form.template_content, highlight_placeholders=False, width='1-1', rows=5) }}
+        {{ sticky_page_footer('Continue') }}
+      </div>
+    </div>
+  {% endcall %}
+
+{% endblock %}
